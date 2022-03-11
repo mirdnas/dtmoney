@@ -3,7 +3,7 @@ import Modal from 'react-modal';
 import closeImage from '../../assets/close.svg'
 import incomeImage from '../../assets/income.svg'
 import outcomeImage from '../../assets/outcome.svg'
-import { api } from "../../services/api";
+import { useTransactions } from "../../hooks/useTransactions";
 import { Container, TransactionTypeContainer, RadioBox } from './styles'
 
 interface NewTransactionModalProps {
@@ -12,6 +12,7 @@ interface NewTransactionModalProps {
 }
 
 const NewTransactionModal = ( { isOpen, onRequestClose }: NewTransactionModalProps ) => {
+  const { createTransaction } = useTransactions();
 
   const [title, setTitle] = useState('');
   const [value, setValue] = useState(0);
@@ -19,15 +20,21 @@ const NewTransactionModal = ( { isOpen, onRequestClose }: NewTransactionModalPro
 
   const [type,setType] = useState('deposit');
 
-  function handleCreateNewTransaction(e:FormEvent) {
+  async function handleCreateNewTransaction({ e }: { e: FormEvent; }) {
     e.preventDefault()
-    const data = {
+    
+    await createTransaction({
       title,
-      value,
-      category
-    }
+      amount: value,
+      category,
+      type
+    })
 
-    api.post('/transactions',data)
+    setTitle('')
+    setValue(0)
+    setCategory('')
+    setType('deposit')
+    onRequestClose()
   }
   
   return (
@@ -46,7 +53,7 @@ const NewTransactionModal = ( { isOpen, onRequestClose }: NewTransactionModalPro
     </button>
 
     <Container 
-      onSubmit={ (event) => handleCreateNewTransaction(event) }
+      onSubmit={ (event) => handleCreateNewTransaction({ e: event }) }
     >
       <h2>Cadastrar transação</h2>
       <input 
@@ -80,7 +87,7 @@ const NewTransactionModal = ( { isOpen, onRequestClose }: NewTransactionModalPro
           activeColor="red"
         >
           <img src={outcomeImage} alt="Saída" />
-          <span>Entrada</span>
+          <span>Saída</span>
         </RadioBox>
 
       </TransactionTypeContainer>
